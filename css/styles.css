@@ -575,6 +575,18 @@ select {
   background-size: 18px;
 }
 
+.scan { margin-bottom: 20px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+.scan .field-hint { display: block; margin-top: 8px; }
+.scan .btn:disabled { opacity: .6; cursor: progress; }
+.field-hint.is-bad { color: var(--due); font-weight: 600; }
+input[type="password"] {
+  display: block; width: 100%; min-height: 50px; padding: 12px 14px;
+  border: 1.5px solid var(--line); border-radius: 14px;
+  background: var(--bg); color: var(--ink); font: inherit; font-size: 16px;
+  -webkit-appearance: none; appearance: none;
+}
+.settings-block .field-hint { display: block; margin-top: 8px; }
+
 .money { position: relative; }
 .money > span {
   position: absolute;
