@@ -790,6 +790,7 @@
     let validate;
     if (kind === 'stay') {
       body = `
+        ${field('Airbnb or booking link', `<input type="text" name="link" value="${esc(it.link)}" maxlength="1000" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Paste the listing link">`, 'Paste an Airbnb listing link to fill in the type and dates')}
         ${field('Type', select('type', typeOptions(STAY_TYPES), it.type || 'hotel'))}
         ${field('Name', text('name', it.name, 'required maxlength="100" placeholder="Hotel Aressana"'))}
         ${field('Address', text('address', it.address, 'maxlength="200" placeholder="Street, town"'))}
@@ -800,7 +801,6 @@
         ${field('Total cost', money('cost', it.cost, cur), 'For the whole stay')}
         ${paidFields(it, cur)}
         ${field('Booking reference', text('ref', it.ref, 'maxlength="80" autocapitalize="characters" placeholder="e.g. 4821.337.905"'))}
-        ${field('Booking link', `<input type="text" name="link" value="${esc(it.link)}" maxlength="1000" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="booking.com/…">`)}
         ${field('Notes', textarea('notes', it.notes, 'Check-in from 3pm, key box code, breakfast included…'))}`;
       validate = (form) => orderCheck(form, 'checkIn', 'checkOut', 'Check-out is before check-in');
     } else if (kind === 'ticket') {
@@ -878,6 +878,40 @@
         toast(item ? 'Saved' : `${k.label} added`);
       },
     });
+
+    if (kind === 'stay') wireAirbnbLink($('form', sheet));
+  }
+
+  // An Airbnb listing link usually carries the dates in it, e.g.
+  // airbnb.co.uk/rooms/12345?check_in=2026-12-31&check_out=2027-01-05&adults=2
+  // Reading them from the pasted text needs no connection and sends nothing anywhere.
+  // The listing's name and price are not in the link, so those are typed by hand.
+  function wireAirbnbLink(form) {
+    const link = form.elements.link;
+    const hint = $('.field-hint', link.closest('.field'));
+    let last = '';
+    const apply = () => {
+      const href = safeUrl(link.value);
+      if (!href || href === last) return;
+      last = href;
+      const u = new URL(href);
+      if (!/(^|\.)airbnb\.[a-z.]{2,}$/i.test(u.hostname) && !/(^|\.)abnb\.me$/i.test(u.hostname)) return;
+
+      form.elements.type.value = 'airbnb';
+      const param = (...names) => names.map((n) => cleanDate(u.searchParams.get(n) || '')).find(Boolean) || '';
+      const checkIn = param('check_in', 'checkin');
+      const checkOut = param('check_out', 'checkout');
+      if (checkIn) form.elements.checkIn.value = checkIn;
+      if (checkOut) form.elements.checkOut.value = checkOut;
+      sheetCtx?.validate?.(form);
+
+      hint.textContent = checkIn && checkOut
+        ? `Airbnb link read: ${fmtShortRange(checkIn, checkOut)}. Add the name and price below.`
+        : 'Airbnb link saved. It has no dates in it, so check the dates, name and price below.';
+      if (!form.elements.name.value) form.elements.name.focus();
+    };
+    link.addEventListener('change', apply);
+    link.addEventListener('paste', () => setTimeout(apply, 0));
   }
 
   /* ---------- settings & backup ---------- */
