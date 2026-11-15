@@ -1,7 +1,7 @@
 /* Holidays service worker: makes the app open with no connection.
    Online → always fetch the latest files (and refresh the offline copy).
    Offline or very slow → fall back to the saved copy. */
-const CACHE = 'holidays-shell-v1';
+const CACHE = 'holidays-shell-v2';
 const SHELL = [
   './',
   'index.html',
@@ -34,7 +34,9 @@ self.addEventListener('fetch', (event) => {
     const cache = await caches.open(CACHE);
     const cached = await cache.match(req, { ignoreSearch: true });
 
-    const network = fetch(req).then((res) => {
+    // 'no-cache' makes the browser check with the server instead of reusing a copy it
+    // downloaded a few minutes ago, so app updates show up on the next open.
+    const network = fetch(req.url, { cache: 'no-cache' }).then((res) => {
       if (res.ok) cache.put(req, res.clone());
       return res;
     });

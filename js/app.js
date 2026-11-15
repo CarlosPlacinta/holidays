@@ -1063,8 +1063,16 @@
   }
 
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    // When a new version of the app takes over, reload once so it is actually shown.
+    const hadController = !!navigator.serviceWorker.controller;
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController || reloaded || sheet.open) return;
+      reloaded = true;
+      location.reload();
+    });
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js').catch((err) => console.warn('Offline support unavailable', err));
+      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch((err) => console.warn('Offline support unavailable', err));
     });
   }
 
