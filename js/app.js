@@ -13,6 +13,7 @@
 
   const STAY_TYPES = [
     { id: 'hotel', label: 'Hotel', icon: '🏨' },
+    { id: 'airbnb', label: 'Airbnb', icon: '🏘️' },
     { id: 'apartment', label: 'Apartment / house', icon: '🏠' },
     { id: 'villa', label: 'Villa / resort', icon: '🏡' },
     { id: 'bnb', label: 'B&B / hostel', icon: '🛏️' },
